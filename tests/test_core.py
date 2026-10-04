@@ -45,6 +45,17 @@ def test_trace_roundtrip_and_bytes():
     assert tr.nbytes() == len(json.dumps(d, ensure_ascii=False).encode("utf-8"))
 
 
+def test_write_json_writes_the_same_lf_bytes_on_every_os(tmp_path):
+    step = Step(0, "init", [], {"en": "ñ", "es": "ñ"}, [amp(1 + 0j)], [[0.0, 0.0, 1.0]], [1.0])
+    tr = Trace(case_id="t", title={"en": "T", "es": "T"}, concept={"en": "", "es": ""}, qubits=1,
+               steps=[step], measurements={"counts": {"0": 10}, "shots": 10}, circuit_ops=[],
+               provenance={"engine": "x", "engine_version": "0", "seed": 42, "lane": "live", "ran_on": "sim"})
+    raw = tr.write_json(tmp_path / "sub" / "t.json").read_bytes()
+    assert b"\r" not in raw and b"\n" in raw
+    assert raw == json.dumps(tr.to_dict(), indent=1, ensure_ascii=False).encode("utf-8")
+    assert json.loads(raw.decode("utf-8")) == tr.to_dict()
+
+
 def test_import_core_does_not_import_a_quantum_sdk():
     import sys
 

@@ -61,7 +61,8 @@ class Trace:
     def write_json(self, path: str | Path) -> Path:
         path = Path(path)
         path.parent.mkdir(parents=True, exist_ok=True)
-        path.write_text(json.dumps(self.to_dict(), indent=1, ensure_ascii=False), encoding="utf-8")
+        # Bytes, not text: write_text turns "\n" into CRLF on Windows, so a run's bytes would depend on the OS.
+        path.write_bytes(json.dumps(self.to_dict(), indent=1, ensure_ascii=False).encode("utf-8"))
         return path
 
     def nbytes(self) -> int:
