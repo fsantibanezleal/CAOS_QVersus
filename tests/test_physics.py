@@ -284,3 +284,26 @@ def test_maxcut_classical_optimum_beats_or_matches_qaoa():
     assert results["qaoa-qiskit"].value["cut"] <= results["maxcut-bruteforce"].value["cut"]
     # Triangle is frustrated: optimum is 2, not 3.
     assert MaxCut().cut_value([[0, 1], [1, 2], [0, 2]], "010") == 2
+
+
+@pytest.mark.parametrize("instance_id, expected", [("grover-2-3", 2.5), ("grover-3-5", 4.5), ("grover-3-2", 4.5),
+                                                   ("grover-3-2marked", 3.0), ("grover-4-10", 8.5),
+                                                   ("grover-4-0", 8.5)])
+def test_grover_classical_reports_the_expected_queries(instance_id, expected):
+    from qversus.registry import get_problem, solvers_for
+
+    problem = get_problem("grover")
+    inst = problem.instance(instance_id)
+    scan = next(s for s in solvers_for(problem) if s.name == "grover-classical")
+    value = scan.run(problem, inst, seed=42, shots=1).value
+    n, m = inst.params["n"], len(inst.params["marked"])
+    assert value["classical_queries"] == expected == (2**n + 1) / (m + 1)
+    assert value["worst_case_queries"] == 2**n - m + 1
+    assert 1 <= value["sampled_queries"] <= value["worst_case_queries"]
+
+    # The seeded draws converge to it. The first marked position is the minimum of a uniform M-subset of
+    # {1..N}, with variance M(N+1)(N-M) / ((M+1)^2 (M+2)); allow four standard errors of the mean.
+    runs = 2000
+    draws = [scan.run(problem, inst, seed=s, shots=1).value["sampled_queries"] for s in range(runs)]
+    var = m * (2**n + 1) * (2**n - m) / ((m + 1) ** 2 * (m + 2))
+    assert abs(sum(draws) / runs - expected) < 4 * (var / runs) ** 0.5

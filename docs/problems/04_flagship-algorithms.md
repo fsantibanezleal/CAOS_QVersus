@@ -18,9 +18,16 @@ Instances: `grover-2-3`, `grover-3-5`, `grover-3-2`, `grover-3-2marked` (items 3
 | Solver | `value` fields (and `extra`) |
 |---|---|
 | `grover-qiskit` | `found`, `correct`, `success_prob` (total probability on the marked items), `quantum_queries`; `extra.iterations`, `extra.success_prob`; trace `extra.marked` (each marked item in counts-key order, e.g. `"1010"` for item 10) |
-| `grover-classical` | `found`, `correct`, `classical_queries` (a seeded random scan) |
+| `grover-classical` | `found`, `correct`, `classical_queries` (the expected cost (N+1)/(M+1)), `sampled_queries` (one seeded run), `worst_case_queries` (N − M + 1) |
 
-Checked: on `grover-3-5` the item is found with success probability above 0.9. References: Grover, STOC '96,
+The classical comparator is an expectation, not a single draw. Scanning the N items in a uniformly random order,
+the first of the M marked items appears at position (N+1)/(M+1) on average: the M marked positions are a uniform
+M-subset of {1, ..., N}, and the expected minimum of such a subset is (N+1)/(M+1). On the six instances that is
+2.5, 4.5, 4.5, 3.0, 8.5 and 8.5 queries (in the order listed above), against Grover's 1, 2, 2, 1, 3 and 3 iterations: the quadratic
+separation, at a size where both are instantaneous.
+
+Checked: on `grover-3-5` the item is found with success probability above 0.9; the classical expectation matches
+(N+1)/(M+1) on every instance, and the mean of 2,000 seeded runs lies within four standard errors of it. References: Grover, STOC '96,
 doi:10.1145/237814.237866; Nielsen and Chuang (2010).
 
 ## `qft`: the quantum Fourier transform
