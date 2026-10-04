@@ -15,13 +15,11 @@ from qversus.problems.base import Instance, Problem
 from qversus.registry import register_solver
 from qversus.solvers.base import QUANTUM_SIM, Solver, SolverResult
 
-try:
-    import stim
+# Imported at module top on purpose: if the framework is missing, this module fails to import, the guarded
+# loader in qversus/solvers/__init__.py records it as unavailable, and none of these solvers registers.
+import stim  # noqa: E402
 
-    STIM_VERSION = stim.__version__
-except Exception:  # pragma: no cover
-    stim = None
-    STIM_VERSION = "unknown"
+STIM_VERSION = stim.__version__
 
 
 @register_solver
@@ -33,7 +31,7 @@ class StimQEC(Solver):
     SHOTS = 30_000
 
     def applicable(self, problem: Problem) -> bool:
-        return problem.id in ("qec-repetition", "qec-surface") and stim is not None
+        return problem.id in ("qec-repetition", "qec-surface")
 
     def run(self, problem, instance: Instance, seed: int, shots: int) -> SolverResult:
         import pymatching

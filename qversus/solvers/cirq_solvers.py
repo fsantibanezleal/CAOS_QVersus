@@ -17,13 +17,11 @@ from qversus.problems.base import Instance, Problem
 from qversus.registry import register_solver
 from qversus.solvers.base import QUANTUM_SIM, Solver, SolverResult
 
-try:
-    import cirq
+# Imported at module top on purpose: if the framework is missing, this module fails to import, the guarded
+# loader in qversus/solvers/__init__.py records it as unavailable, and none of these solvers registers.
+import cirq  # noqa: E402
 
-    CIRQ_VERSION = cirq.__version__
-except Exception:  # pragma: no cover
-    cirq = None
-    CIRQ_VERSION = "unknown"
+CIRQ_VERSION = cirq.__version__
 
 
 @register_solver
@@ -35,7 +33,7 @@ class CirqQAOA(Solver):
     GRID = 24
 
     def applicable(self, problem: Problem) -> bool:
-        return problem.id == "maxcut" and cirq is not None
+        return problem.id == "maxcut"
 
     def run(self, problem, instance: Instance, seed: int, shots: int) -> SolverResult:
         n, edges = instance.params["n"], instance.params["edges"]

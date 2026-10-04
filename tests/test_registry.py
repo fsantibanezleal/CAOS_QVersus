@@ -2,6 +2,9 @@
 
 from __future__ import annotations
 
+import subprocess
+import sys
+
 import pytest
 
 from qversus.registry import all_problems, all_solvers, get_problem, solvers_for
@@ -49,6 +52,35 @@ def test_every_problem_is_attacked_by_a_quantum_method_and_a_classical_baseline(
     paradigms = {s.paradigm for s in solvers_for(problem)}
     assert CLASSICAL in paradigms, f"{problem_id} has no classical baseline"
     assert paradigms - {CLASSICAL}, f"{problem_id} has no quantum method"
+
+
+@pytest.mark.parametrize(
+    "module, framework, solvers",
+    [
+        ("pennylane", "PennyLane", ["vqe-pennylane", "qml-pennylane", "qaoa-pennylane"]),
+        ("cirq", "Cirq", ["qaoa-cirq"]),
+        ("stim", "Stim (QEC)", ["qec-stim"]),
+        ("qiskit", "Qiskit + Aer", ["grover-qiskit", "qaoa-qiskit"]),
+    ],
+)
+def test_a_missing_framework_disables_only_its_own_adapters(module, framework, solvers):
+    # A fresh interpreter, because the registry is filled once per process. `sys.modules[name] = None` makes
+    # `import name` raise ImportError, which is exactly what an absent framework does.
+    code = f"""
+import sys, warnings
+sys.modules[{module!r}] = None
+warnings.simplefilter("ignore")
+import qversus.solvers as s
+from qversus.registry import all_solvers, get_problem, solvers_for
+assert s.LOADED[{framework!r}] is False, s.LOADED
+registered = set(all_solvers())
+assert not registered & set({solvers!r}), registered & set({solvers!r})
+assert "grover-classical" in registered
+assert [x.name for x in solvers_for(get_problem("grover")) if x.paradigm == "classical"] == ["grover-classical"]
+print("ok")
+"""
+    out = subprocess.run([sys.executable, "-c", code], capture_output=True, text=True)
+    assert out.returncode == 0 and out.stdout.strip() == "ok", out.stderr[-2000:]
 
 
 def test_hardware_adapters_are_never_in_the_default_set():

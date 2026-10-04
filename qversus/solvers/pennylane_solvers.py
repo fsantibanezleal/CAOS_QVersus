@@ -16,13 +16,11 @@ from qversus.problems.base import Instance, Problem
 from qversus.registry import register_solver
 from qversus.solvers.base import QUANTUM_SIM, Solver, SolverResult
 
-try:
-    import pennylane as qml
+# Imported at module top on purpose: if the framework is missing, this module fails to import, the guarded
+# loader in qversus/solvers/__init__.py records it as unavailable, and none of these solvers registers.
+import pennylane as qml  # noqa: E402
 
-    PENNYLANE_VERSION = qml.__version__
-except Exception:  # pragma: no cover
-    qml = None
-    PENNYLANE_VERSION = "unknown"
+PENNYLANE_VERSION = qml.__version__
 
 
 def build_h2(r_bohr: float):
@@ -43,7 +41,7 @@ class PennyLaneVQE(Solver):
     GRID = 100
 
     def applicable(self, problem: Problem) -> bool:
-        return problem.id == "vqe" and qml is not None
+        return problem.id == "vqe"
 
     def run(self, problem, instance: Instance, seed: int, shots: int) -> SolverResult:
         H, nq = build_h2(instance.params["R_bohr"])
@@ -84,7 +82,7 @@ class PennyLaneQML(Solver):
     paradigm = QUANTUM_SIM
 
     def applicable(self, problem: Problem) -> bool:
-        return problem.id == "qml" and qml is not None
+        return problem.id == "qml"
 
     def run(self, problem, instance: Instance, seed: int, shots: int) -> SolverResult:
         from sklearn.svm import SVC
@@ -136,7 +134,7 @@ class PennyLaneQAOA(Solver):
     GRID = 24
 
     def applicable(self, problem: Problem) -> bool:
-        return problem.id == "maxcut" and qml is not None
+        return problem.id == "maxcut"
 
     def run(self, problem, instance: Instance, seed: int, shots: int) -> SolverResult:
         import networkx as nx
