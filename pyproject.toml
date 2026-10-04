@@ -1,0 +1,72 @@
+[build-system]
+requires = ["setuptools>=68", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "qversus"
+version = "0.1.0"
+description = "Canonical quantum-computing problems solved by real frameworks (Qiskit, PennyLane, Cirq, Stim) next to classical baselines, with replayable, seeded traces."
+readme = "README.md"
+requires-python = ">=3.11"
+license = { text = "MIT" }
+authors = [{ name = "Felipe Santibanez-Leal" }]
+keywords = [
+  "quantum computing", "quantum algorithms", "benchmark", "classical baseline", "qiskit", "pennylane",
+  "cirq", "stim", "grover", "qaoa", "vqe", "quantum error correction", "surface code", "education",
+]
+classifiers = [
+  "Development Status :: 3 - Alpha",
+  "Intended Audience :: Science/Research",
+  "Intended Audience :: Education",
+  "License :: OSI Approved :: MIT License",
+  "Programming Language :: Python :: 3",
+  "Programming Language :: Python :: 3.11",
+  "Programming Language :: Python :: 3.12",
+  "Programming Language :: Python :: 3.13",
+  "Topic :: Scientific/Engineering :: Physics",
+  "Topic :: Education",
+  "Operating System :: OS Independent",
+]
+# The core (RNG, trace schema, problem formulations, the registry and the classical adapters' module) needs
+# NumPy only. Each framework is an extra, imported where it is used, so a missing framework disables only
+# its own adapters and `import qversus` stays light.
+dependencies = ["numpy>=1.26"]
+
+[project.optional-dependencies]
+qiskit = ["qiskit>=2.4,<3", "qiskit-aer>=0.17"]
+pennylane = ["pennylane>=0.45", "networkx>=3.2"]
+cirq = ["cirq-core>=1.6"]
+stim = ["stim>=1.16", "pymatching>=2.0"]
+learn = ["scikit-learn>=1.5"]
+hardware = ["qiskit>=2.4,<3", "qiskit-ibm-runtime>=0.30"]
+all = [
+  "qiskit>=2.4,<3", "qiskit-aer>=0.17", "pennylane>=0.45", "networkx>=3.2", "cirq-core>=1.6",
+  "stim>=1.16", "pymatching>=2.0", "scikit-learn>=1.5",
+]
+dev = [
+  "pytest>=8.0", "ruff==0.15.18", "build>=1.0",
+  "qiskit>=2.4,<3", "qiskit-aer>=0.17", "pennylane>=0.45", "networkx>=3.2", "cirq-core>=1.6",
+  "stim>=1.16", "pymatching>=2.0", "scikit-learn>=1.5",
+]
+
+[project.urls]
+Homepage = "https://github.com/fsantibanezleal/CAOS_QVersus"
+Documentation = "https://github.com/fsantibanezleal/CAOS_QVersus/blob/main/docs/README.md"
+Issues = "https://github.com/fsantibanezleal/CAOS_QVersus/issues"
+Changelog = "https://github.com/fsantibanezleal/CAOS_QVersus/blob/main/CHANGELOG.md"
+
+[tool.setuptools.packages.find]
+include = ["qversus*"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "-q"
+
+[tool.ruff]
+line-length = 110
+target-version = "py311"
+
+[tool.ruff.lint]
+# The classic rule set, stated explicitly so a new ruff release cannot redden trunk CI.
+select = ["E4", "E7", "E9", "F"]
+ignore = ["E741"]
