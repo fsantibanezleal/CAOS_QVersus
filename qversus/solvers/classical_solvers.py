@@ -244,11 +244,12 @@ class ClassicalFactor(Solver):
             value={"factors": factors, "method": "trial division", "ops": int(N**0.5)},
             cost={"wall_ms": round(wall, 4), "ops": int(N**0.5)},
             notes={"en": f"Trial division factors {N} = {factors[0]}×{factors[1]} in microseconds. "
-                         "Factoring is easy here; RSA-2048 needs ~10⁶ fault-tolerant qubits (Gidney 2025), "
-                         "Shor is no near-term crypto threat.",
+                         "Factoring is easy at this size. For RSA-2048, Gidney (2025) estimates fewer than a "
+                         "million noisy physical qubits running an error-corrected computation for under a week.",
                    "es": f"La división de prueba factoriza {N} = {factors[0]}×{factors[1]} en microsegundos. "
-                         "Factorizar es fácil aquí; RSA-2048 necesita ~10⁶ qubits con tolerancia a fallos "
-                         "(Gidney 2025), Shor no es una amenaza criptográfica de corto plazo."},
+                         "Factorizar es fácil a este tamaño. Para RSA-2048, Gidney (2025) estima menos de un "
+                         "millón de qubits físicos ruidosos ejecutando un cómputo con corrección de errores "
+                         "durante menos de una semana."},
             optimal=True,
         )
 

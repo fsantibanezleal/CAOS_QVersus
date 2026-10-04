@@ -1,12 +1,11 @@
-"""Shor's algorithm (toy: factor 15), order-finding via QPE, and the headline honesty case.
+"""Shor's algorithm (toy: factor 15), order-finding via QPE.
 
 Shor factors N by finding the multiplicative order r of a random base a mod N (the smallest r with
 aʳ ≡ 1), using quantum phase estimation on the modular-multiplication unitary U_a|y⟩=|a·y mod N⟩. From r,
 classical gcd's give the factors. qversus runs the real order-finding (a genuine 16-dim modular-mult unitary,
-not a pre-encoded answer) for N=15 across several bases. The honesty payload is huge: factoring 15 is
-trivial classically, and breaking RSA-2048 needs ~10⁶ noisy physical qubits + full fault tolerance
-(Gidney 2025), 3–4 orders of magnitude beyond today. "Quantum will break encryption soon" is the claim
-this case is built to puncture.
+not a pre-encoded answer) for N=15 across several bases. Factoring 15 is trivial classically; the case shows
+the mechanism, not a capability. For RSA-2048, Gidney (2025) estimates fewer than a million noisy physical
+qubits running an error-corrected computation for under a week.
 """
 
 from __future__ import annotations
@@ -27,19 +26,18 @@ class Shor(Problem):
             "Quantum phase estimation on the modular-multiplication unitary U_a|y⟩=|a·y mod N⟩ yields a "
             "phase s/r; continued fractions recover r; then gcd(a^{r/2}±1, N) gives the factors. We run the "
             "real order-finding for N=15 over several bases. It works, but factoring 15 is trivial "
-            "classically, and a cryptographically relevant Shor (RSA-2048) needs on the order of a MILLION "
-            "noisy physical qubits and full fault tolerance, three-to-four orders of magnitude beyond "
-            "today's ~100-qubit machines. This case exists to puncture 'quantum breaks encryption soon'."
+            "classically: the case shows the mechanism, not a capability. For a cryptographically relevant "
+            "size (RSA-2048), Gidney (2025) estimates fewer than a million noisy physical qubits running an "
+            "error-corrected computation for under a week."
         ),
         "es": (
             "Shor reduce factorizar N a hallar el orden r de una base a (el menor r con aʳ ≡ 1 mod N). La "
             "estimación cuántica de fase sobre el unitario de multiplicación modular U_a|y⟩=|a·y mod N⟩ da "
             "una fase s/r; las fracciones continuas recuperan r; luego gcd(a^{r/2}±1, N) da los factores. "
             "Ejecutamos el order-finding real para N=15 con varias bases. Funciona, pero factorizar 15 es "
-            "trivial clásicamente, y un Shor criptográficamente relevante (RSA-2048) necesita del orden de "
-            "un millón de qubits físicos ruidosos y tolerancia a fallos completa, tres-a-cuatro órdenes de "
-            "magnitud más allá de las máquinas de ~100 qubits de hoy. Este caso existe para desinflar el "
-            "'lo cuántico romperá el cifrado pronto'."
+            "trivial clásicamente: el caso muestra el mecanismo, no una capacidad. Para un tamaño "
+            "criptográficamente relevante (RSA-2048), Gidney (2025) estima menos de un millón de qubits "
+            "físicos ruidosos ejecutando un cómputo con corrección de errores durante menos de una semana."
         ),
     }
     metric = {"en": "factors of N", "es": "factores de N"}
