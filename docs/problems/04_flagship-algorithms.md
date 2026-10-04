@@ -17,7 +17,7 @@ Instances: `grover-2-3`, `grover-3-5`, `grover-3-2`, `grover-3-2marked` (items 3
 
 | Solver | `value` fields (and `extra`) |
 |---|---|
-| `grover-qiskit` | `found`, `correct`, `success_prob` (total probability on the marked items), `quantum_queries`; `extra.iterations`, `extra.success_prob`; trace `extra.marked` |
+| `grover-qiskit` | `found`, `correct`, `success_prob` (total probability on the marked items), `quantum_queries`; `extra.iterations`, `extra.success_prob`; trace `extra.marked` (each marked item in counts-key order, e.g. `"1010"` for item 10) |
 | `grover-classical` | `found`, `correct`, `classical_queries` (a seeded random scan) |
 
 Checked: on `grover-3-5` the item is found with success probability above 0.9. References: Grover, STOC '96,

@@ -633,7 +633,7 @@ class ClassicalSearch(Solver):
             if int(x) in marked:
                 found_idx = int(x)
                 break
-        found = format(found_idx, f"0{n}b")[::-1] if found_idx is not None else "?"
+        found = format(found_idx, f"0{n}b") if found_idx is not None else "?"   # the item, in counts-key order
         wall = (time.perf_counter() - t0) * 1e3
         avg = (N + 1) / (len(marked) + 1)
         return SolverResult(

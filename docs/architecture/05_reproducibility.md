@@ -31,7 +31,8 @@ The single convention, used everywhere:
   (qubits 3 and 1 are `|1>`).
 - **Problem answers that are bit strings indexed by position** (a Bernstein-Vazirani secret, a MaxCut
   partition) state their own order in the adapter: position `u` is qubit `u`, the reverse of the count keys.
-  Grover's `found` and `extra.marked` currently use this position order too, although a marked item is an
-  item, not a position string; aligning them with the count keys is tracked as a defect.
+- **Answers that are items** (Grover's `found` and the trace's `extra.marked`) use the count-key order, so the
+  item can be looked up in the histogram directly: item 10 on four qubits is `"1010"`, the key that holds its
+  shots and the ket in the instance title `|1010⟩`.
 
 Read next: [../problems.md](../problems.md).
