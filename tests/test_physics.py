@@ -71,6 +71,30 @@ def test_grover_finds_marked():
     assert res["grover-classical"].value["correct"] is True
 
 
+@pytest.mark.parametrize("instance_id", ["grover-2-3", "grover-3-5", "grover-3-2", "grover-3-2marked",
+                                         "grover-4-10", "grover-4-0"])
+def test_grover_item_labels_are_the_counts_keys(instance_id):
+    import re
+
+    from qversus.registry import get_problem, solvers_for
+
+    problem = get_problem("grover")
+    inst = problem.instance(instance_id)
+    n, marked = inst.params["n"], inst.params["marked"]
+    res = {s.name: s.run(problem, inst, seed=42, shots=2048) for s in solvers_for(problem)}
+    q = res["grover-qiskit"]
+    labels = q.trace.extra["marked"]
+    counts = q.trace.measurements["counts"]
+
+    assert labels == [format(w, f"0{n}b") for w in marked]           # the item's index, in binary
+    assert labels == re.findall(r"\|([01]+)⟩", inst.title["en"])      # ... which is the ket in the title
+    assert all(lab in counts for lab in labels)                       # ... and a key of the histogram
+    share = sum(counts[lab] for lab in labels) / q.trace.measurements["shots"]
+    assert abs(share - q.value["success_prob"]) < 0.05                # the marked keys hold the success mass
+    assert q.value["found"] in labels and q.value["correct"] is True
+    assert res["grover-classical"].value["found"] in labels
+
+
 def test_qft_matches_analytic_dft():
     from qversus.registry import get_problem, solvers_for
 

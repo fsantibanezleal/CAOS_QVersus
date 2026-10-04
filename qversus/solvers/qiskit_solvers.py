@@ -923,7 +923,8 @@ class QiskitGrover(Solver):
         steps = evolve(qc)
         probs = np.asarray(Statevector(qc).probabilities())
         idx = int(np.argmax(probs))
-        found = format(idx, f"0{n}b")[::-1]                       # qubit order: position u = qubit u
+        # A Grover answer is an ITEM: label it with its index in binary, the order the counts keys use.
+        found = format(idx, f"0{n}b")
         success = float(sum(probs[w] for w in marked))            # total prob on the marked subspace
         wall = (time.perf_counter() - t0) * 1e3
         trace = Trace(
@@ -933,7 +934,7 @@ class QiskitGrover(Solver):
                         "lane": "tbd", "ran_on": "simulator"},
             references=problem.references,
             extra={"iterations": k, "success_prob": round(success, 4),
-                   "marked": [format(w, f"0{n}b")[::-1] for w in marked]},
+                   "marked": [format(w, f"0{n}b") for w in marked]},
         )
         return SolverResult(
             solver=self.name, label=self.label, framework=self.framework, paradigm=self.paradigm,
