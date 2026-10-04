@@ -635,15 +635,23 @@ class ClassicalSearch(Solver):
                 break
         found = format(found_idx, f"0{n}b") if found_idx is not None else "?"   # the item, in counts-key order
         wall = (time.perf_counter() - t0) * 1e3
-        avg = (N + 1) / (len(marked) + 1)
+        # The fair comparator is the EXPECTED cost, not one draw: the first of M marked items in a uniformly
+        # random order of N sits at position (N+1)/(M+1) on average (the expected minimum of M distinct
+        # uniform positions in 1..N). The worst case is N - M + 1.
+        M = len(marked)
+        expected = (N + 1) / (M + 1)
+        worst = N - M + 1
         return SolverResult(
             solver=self.name, label=self.label, framework=self.framework, paradigm=self.paradigm,
-            value={"found": found, "correct": found_idx in marked, "classical_queries": queries},
-            cost={"wall_ms": round(wall, 4), "oracle_queries": queries},
-            notes={"en": f"Found a marked item after {queries} queries (worst case {N}, average ≈ "
-                         f"{avg:.1f}); the quantum advantage is the quadratic ~√N.",
-                   "es": f"Halló un ítem marcado tras {queries} consultas (peor caso {N}, promedio ≈ "
-                         f"{avg:.1f}); la ventaja cuántica es el ~√N cuadrático."},
+            value={"found": found, "correct": found_idx in marked, "classical_queries": round(expected, 4),
+                   "sampled_queries": queries, "worst_case_queries": worst},
+            cost={"wall_ms": round(wall, 4), "oracle_queries": round(expected, 4)},
+            notes={"en": f"A random scan needs (N+1)/(M+1) = {expected:.1f} queries on average to hit one of the "
+                         f"{M} marked item(s) among {N} (worst case {worst}); this seeded run took {queries}. "
+                         "Grover's ~(π/4)√(N/M) is the quadratic separation.",
+                   "es": f"Un barrido aleatorio necesita (N+1)/(M+1) = {expected:.1f} consultas en promedio para dar "
+                         f"con uno de los {M} ítem(s) marcados entre {N} (peor caso {worst}); esta corrida con "
+                         f"semilla tomó {queries}. El ~(π/4)√(N/M) de Grover es la separación cuadrática."},
             optimal=True,
         )
 
