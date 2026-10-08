@@ -3,6 +3,15 @@
 All notable changes to `qversus`. Format: newest first, grouped Added / Changed / Fixed / Removed. Versions follow
 `X.XX.XXX` (major.minor.patch, zero-padded); `pyproject.toml` carries the PEP 440 form. Tags `vX.XX.XXX`.
 
+## [0.01.001], 2026-10-07
+
+### Fixed
+
+- The Grover texts state the classical expectation (N+1)/(M+1), not "~N/2" (#15): the concept, the module
+  docstring and every instance note, which now gives its own numbers (Grover's iteration count against the
+  expected queries of a random scan). `Grover.optimal_iterations` is the formula the Qiskit solver runs; a test
+  ties every note to the solvers' values. No value or cost changed.
+
 ## [0.01.000], 2026-10-04
 
 ### Added

@@ -307,3 +307,21 @@ def test_grover_classical_reports_the_expected_queries(instance_id, expected):
     draws = [scan.run(problem, inst, seed=s, shots=1).value["sampled_queries"] for s in range(runs)]
     var = m * (2**n + 1) * (2**n - m) / ((m + 1) ** 2 * (m + 2))
     assert abs(sum(draws) / runs - expected) < 4 * (var / runs) ** 0.5
+
+
+def test_grover_notes_state_the_numbers_the_solvers_report():
+    import re
+
+    from qversus.registry import get_problem, solvers_for
+
+    pytest.importorskip("qiskit")
+    problem = get_problem("grover")
+    by_name = {s.name: s for s in solvers_for(problem)}
+    for inst in problem.instances():
+        assert "~N/2" not in inst.note["en"] and "~N/2" not in inst.note["es"]
+        k, expected = re.search(r"Grover's (\d+) iterations? against the ([\d.]+) queries", inst.note["en"]).groups()
+        quantum = by_name["grover-qiskit"].run(problem, inst, seed=42, shots=64)
+        classical = by_name["grover-classical"].run(problem, inst, seed=42, shots=64)
+        assert int(k) == quantum.extra["iterations"], inst.id
+        assert float(expected) == classical.value["classical_queries"], inst.id
+    assert "~N/2" not in problem.concept["en"] and "(N+1)/(M+1)" in problem.concept["en"]
