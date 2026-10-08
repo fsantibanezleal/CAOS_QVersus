@@ -14,4 +14,4 @@ The core needs NumPy only. Each framework is an optional extra; a missing framew
 adapters. See the README and docs/ for the contracts.
 """
 
-__version__ = "0.01.000"  # display form X.XX.XXX; pyproject.toml carries the PEP 440 form 0.1.0
+__version__ = "0.01.001"  # display form X.XX.XXX; pyproject.toml carries the PEP 440 form 0.1.1
