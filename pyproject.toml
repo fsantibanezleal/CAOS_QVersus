@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "qversus"
-version = "0.1.0"
+version = "0.1.1"
 description = "Canonical quantum-computing problems solved by real frameworks (Qiskit, PennyLane, Cirq, Stim) next to classical baselines, with replayable, seeded traces."
 readme = "README.md"
 requires-python = ">=3.11"
