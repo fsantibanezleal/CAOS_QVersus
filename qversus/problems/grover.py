@@ -1,13 +1,16 @@
 """Grover's search, amplitude amplification over an unstructured database.
 
 Find a marked item in an unstructured set of N = 2ⁿ items. Grover needs ~(π/4)√(N/M) oracle queries
-(M = number of marked items) vs the classical ~N/2. The famous quadratic speedup, but honestly: it is
+(M = number of marked items) vs the (N+1)/(M+1) a random classical scan needs on average. The famous quadratic
+speedup, but honestly: it is
 *quadratic, asymptotic*, and at the tiny n a laptop simulates exactly, the classical scan still wins on
 wall-time. What it teaches beautifully is amplitude amplification: each iteration tips probability toward
 the marked state, and over-rotating (too many iterations) tips it back.
 """
 
 from __future__ import annotations
+
+import math
 
 from qversus.problems.base import Instance, Problem
 from qversus.registry import register_problem
@@ -25,16 +28,17 @@ class Grover(Problem):
             "superposition; each Grover iteration applies the oracle (a phase flip on the marked states) "
             "then the diffuser (inversion about the mean), rotating amplitude toward the marked subspace. "
             "After ~(π/4)√(N/M) iterations a measurement returns a marked item with high probability, a "
-            "quadratic speedup over the classical ~N/2 scan. Run too many iterations and you *over-rotate* "
-            "past the target."
+            "quadratic speedup over a random classical scan, which needs (N+1)/(M+1) queries on average. Run "
+            "too many iterations and you *over-rotate* past the target."
         ),
         "es": (
             "Grover busca entre N = 2ⁿ ítems no estructurados los M marcados. Parte en superposición "
             "uniforme; cada iteración de Grover aplica el oráculo (un cambio de fase en los estados "
             "marcados) y luego el difusor (inversión respecto a la media), rotando la amplitud hacia el "
             "subespacio marcado. Tras ~(π/4)√(N/M) iteraciones una medición devuelve un ítem marcado con "
-            "alta probabilidad, un speedup cuadrático sobre el barrido clásico ~N/2. Con demasiadas "
-            "iteraciones te *pasas* del objetivo (sobre-rotación)."
+            "alta probabilidad, un speedup cuadrático sobre un barrido clásico aleatorio, que necesita "
+            "(N+1)/(M+1) consultas en promedio. Con demasiadas iteraciones te *pasas* del objetivo "
+            "(sobre-rotación)."
         ),
     }
     metric = {"en": "marked item found", "es": "ítem marcado encontrado"}
@@ -57,9 +61,19 @@ class Grover(Problem):
         out = []
         for iid, label, params in defs:
             n, m = params["n"], len(params["marked"])
+            N = 2 ** n
+            k = self.optimal_iterations(N, m)
+            expected = (N + 1) / (m + 1)
             out.append(Instance(
                 iid, {"en": label, "es": label}, params,
-                {"en": f"N={2 ** n}, M={m} marked, quantum ~(π/4)√(N/M) queries vs classical ~N/2.",
-                 "es": f"N={2 ** n}, M={m} marcados, cuántico ~(π/4)√(N/M) consultas vs clásico ~N/2."},
+                {"en": f"N={N}, M={m} marked: Grover's {k} iteration{'s' if k != 1 else ''} against the "
+                       f"{expected:g} queries a random classical scan needs on average, (N+1)/(M+1).",
+                 "es": f"N={N}, M={m} marcados: {k} iteración{'es' if k != 1 else ''} de Grover frente a las "
+                       f"{expected:g} consultas que un barrido clásico aleatorio necesita en promedio, (N+1)/(M+1)."},
             ))
         return out
+
+    @staticmethod
+    def optimal_iterations(N: int, M: int) -> int:
+        """⌊(π/4)√(N/M)⌋, at least one: the iteration count the Qiskit solver runs."""
+        return max(1, math.floor(math.pi / 4 * math.sqrt(N / M)))
