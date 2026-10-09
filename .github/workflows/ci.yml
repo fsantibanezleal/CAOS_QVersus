@@ -52,13 +52,16 @@ jobs:
           import qversus
           with warnings.catch_warnings():
               warnings.simplefilter("ignore")   # the framework adapters warn that their framework is absent
+              import qversus.problems as catalogue
               from qversus.registry import all_problems, get_problem, solvers_for
-              assert len(all_problems()) == 20, sorted(all_problems())
+              # Every problem module listed in the catalogue registered, with no framework installed.
+              assert len(all_problems()) == len(catalogue.__all__), sorted(all_problems())
               problem = get_problem("grover")
               classical = [s for s in solvers_for(problem) if s.paradigm == "classical"]
           result = classical[0].run(problem, problem.instance("grover-4-10"), seed=42, shots=1)
           assert result.value["correct"] is True, result.value
-          print(f"OK: qversus {qversus.__version__}, NumPy-only core, 20 problems, a classical solver ran")
+          print(f"OK: qversus {qversus.__version__}, NumPy-only core, {len(all_problems())} problems, a classical "
+                "solver ran")
           PY
 
   guards:

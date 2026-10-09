@@ -13,11 +13,11 @@ from qversus.solvers.base import CLASSICAL, PARADIGMS, QUANTUM_HARDWARE
 EXPECTED_PROBLEMS = {
     "state-prep", "maxcut", "bernstein-vazirani", "deutsch-jozsa", "simon", "grover", "qft", "qpe", "shor",
     "vqe", "qml", "noise", "qec-repetition", "qec-surface", "chsh", "teleportation", "superdense",
-    "single-qubit", "qrng", "interference", "bb84",
+    "single-qubit", "qrng", "interference", "bb84", "compilation",
 }
 
 
-def test_catalogue_has_the_twenty_one_problems():
+def test_catalogue_has_the_twenty_two_problems():
     assert set(all_problems()) == EXPECTED_PROBLEMS
 
 
@@ -61,6 +61,7 @@ def test_every_problem_is_attacked_by_a_quantum_method_and_a_classical_baseline(
         ("cirq", "Cirq", ["qaoa-cirq"]),
         ("stim", "Stim (QEC)", ["qec-stim"]),
         ("qulacs", "Qulacs", ["statevector-qulacs"]),
+        ("pytket", "pytket", ["compile-pytket"]),
         ("qiskit", "Qiskit + Aer", ["grover-qiskit", "qaoa-qiskit"]),
     ],
 )

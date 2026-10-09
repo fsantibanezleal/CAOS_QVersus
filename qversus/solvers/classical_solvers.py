@@ -738,3 +738,38 @@ class ClassicalTappedChannel(Solver):
                          "perturba nada; esa es la brecha que BB84 cierra."},
             optimal=True,
         )
+
+
+@register_solver
+class RebaseOnly(Solver):
+    name = "compile-rebase"
+    label = {"en": "Gate-by-gate translation · classical", "es": "Traducción compuerta a compuerta · clásica"}
+    framework = "classical:numpy"
+    paradigm = CLASSICAL
+
+    def applicable(self, problem: Problem) -> bool:
+        return problem.id == "compilation"
+
+    def run(self, problem, instance: Instance, seed: int, shots: int) -> SolverResult:
+        # Every source gate replaced by its textbook decomposition into {CX, RZ, SX, X}, nothing merged or
+        # cancelled: always correct, never clever. The optimising compilers are measured against it.
+        from qversus.problems.compilation import compiled_value, rebase, source_circuit, unitary
+        from qversus.problems.compilation import equivalent as same_unitary
+
+        n = instance.params["n"]
+        src = source_circuit(instance.params)
+        t0 = time.perf_counter()
+        out = rebase(src)
+        wall = (time.perf_counter() - t0) * 1e3
+        value = compiled_value(src, out, n, same_unitary(unitary(out, n), unitary(src, n)), list(range(n)))
+        return SolverResult(
+            solver=self.name, label=self.label, framework=self.framework, paradigm=self.paradigm,
+            value=value,
+            cost={"wall_ms": round(wall, 3), "qubits": n},
+            notes={"en": f"Each of the {value['source']['gates']} source gates replaced by its textbook decomposition: "
+                         f"{value['two_qubit']} CX, depth {value['depth']}, {value['gates']} gates. Correct (same "
+                         "unitary), but nothing is merged or cancelled.",
+                   "es": f"Cada una de las {value['source']['gates']} compuertas fuente reemplazada por su "
+                         f"descomposición de libro: {value['two_qubit']} CX, profundidad {value['depth']}, "
+                         f"{value['gates']} compuertas. Correcto (mismo unitario), pero nada se fusiona ni cancela."},
+        )

@@ -39,15 +39,18 @@ cirq = ["cirq-core>=1.6"]
 stim = ["stim>=1.16", "pymatching>=2.0"]
 learn = ["scikit-learn>=1.5"]
 qulacs = ["qulacs>=0.6", "qiskit>=2.4,<3"]
+pytket = ["pytket>=2.18"]
 hardware = ["qiskit>=2.4,<3", "qiskit-ibm-runtime>=0.30"]
 all = [
   "qiskit>=2.4,<3", "qiskit-aer>=0.17", "pennylane>=0.45", "networkx>=3.2", "cirq-core>=1.6",
   "stim>=1.16", "pymatching>=2.0", "scikit-learn>=1.5", "qulacs>=0.6",
+  "pytket>=2.18",
 ]
 dev = [
   "pytest>=8.0", "ruff==0.15.18", "build>=1.0",
   "qiskit>=2.4,<3", "qiskit-aer>=0.17", "pennylane>=0.45", "networkx>=3.2", "cirq-core>=1.6",
   "stim>=1.16", "pymatching>=2.0", "scikit-learn>=1.5", "qulacs>=0.6",
+  "pytket>=2.18",
 ]
 
 [project.urls]

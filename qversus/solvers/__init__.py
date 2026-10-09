@@ -14,6 +14,7 @@ _ADAPTER_MODULES = [
     ("qversus.solvers.cirq_solvers", "Cirq"),
     ("qversus.solvers.stim_solvers", "Stim (QEC)"),
     ("qversus.solvers.qulacs_solvers", "Qulacs"),
+    ("qversus.solvers.pytket_solvers", "pytket"),
     ("qversus.solvers.hardware_solvers", "Real hardware (IBM, opt-in)"),
 ]
 

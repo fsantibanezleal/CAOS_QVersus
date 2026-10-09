@@ -1,6 +1,6 @@
 # Problems
 
-Twenty-one formulations in six families, 125 instances. Each page lists, per problem, the instance parameters,
+Twenty-two formulations in seven families, 131 instances. Each page lists, per problem, the instance parameters,
 the result fields of each solver, the closed-form facts the test suite asserts, and the primary references.
 
 | Problem | Family | Metric | Instances | Quantum solvers | Classical baseline |
@@ -26,6 +26,7 @@ the result fields of each solver, the closed-form facts the test suite asserts, 
 | `noise` | noise and QEC | ⟨Z₀Z₁⟩ (ideal 1) | 6 | `noise-qiskit` (Aer) | `noise-classical` |
 | `qec-repetition` | noise and QEC | logical error rate | 6 | `qec-stim` | `qec-baseline` |
 | `qec-surface` | noise and QEC | logical error rate | 6 | `qec-stim` | `qec-baseline` |
+| `compilation` | compilation | two-qubit gates after compiling to {CX, RZ, SX, X} | 6 | `compile-qiskit`, `compile-pytket` | `compile-rebase` |
 
 ## Families
 
@@ -35,5 +36,6 @@ the result fields of each solver, the closed-form facts the test suite asserts, 
 4. [Flagship algorithms](problems/04_flagship-algorithms.md): Grover, the QFT, phase estimation, Shor (N = 15).
 5. [Variational](problems/05_variational.md): QAOA on MaxCut, VQE on H2, a quantum-kernel classifier.
 6. [Noise and error correction](problems/06_noise-and-qec.md): depolarising noise with zero-noise extrapolation, repetition and surface codes.
+7. [Compilation](problems/07_compilation.md): QFT, a Grover iteration, a redundant GHZ chain, a full adder and a random circuit compiled to a native gate set by Qiskit and pytket.
 
 Every solver result also carries `cost.wall_ms` and bilingual `notes`; they are not repeated in the tables.

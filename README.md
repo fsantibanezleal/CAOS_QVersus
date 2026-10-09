@@ -9,7 +9,7 @@ usually still more practical, with every run recorded as a replayable, seeded tr
 
 `qversus` separates *what* to compute from *how*. A `Problem` is a formulation (Grover search, MaxCut, the H2
 ground state, a surface-code memory, ...) with a set of parameter regimes (`Instance`s). A `Solver` is a thin
-adapter that attacks a problem with **one** real framework (Qiskit + Aer, PennyLane, Cirq, Stim + PyMatching, Qulacs)
+adapter that attacks a problem with **one** real framework (Qiskit + Aer, PennyLane, Cirq, Stim + PyMatching, Qulacs, pytket)
 or with a classical method, and returns the same `SolverResult` shape whatever the framework. A registry pairs
 them, so running a quantum method and the classical baseline side by side is one loop, not one script per
 framework.
@@ -32,11 +32,12 @@ pip install "qversus[all]"          # every simulator-based adapter
 
 | Extra | Brings | Enables |
 |---|---|---|
-| `qiskit` | `qiskit>=2.4,<3`, `qiskit-aer>=0.17` | the circuit adapters (16 problems), the step tracer, the Aer noise model |
+| `qiskit` | `qiskit>=2.4,<3`, `qiskit-aer>=0.17` | the circuit adapters (18 problems), the step tracer, the Aer noise model, the transpiler |
 | `pennylane` | `pennylane>=0.45`, `networkx` | QAOA cross-check, VQE on H2, the quantum-kernel classifier, the H2 Hamiltonian for the exact baseline |
 | `cirq` | `cirq-core>=1.6` | the third QAOA implementation |
 | `stim` | `stim>=1.16`, `pymatching>=2.0` | repetition and surface-code memories decoded by minimum-weight matching |
 | `qulacs` | `qulacs>=0.6`, `qiskit` | a second state-vector engine running the circuit Qiskit builds |
+| `pytket` | `pytket>=2.18` | the tket compiler on the compilation problem |
 | `learn` | `scikit-learn>=1.5` | the classical RBF-SVM baseline and the precomputed-kernel SVM |
 | `hardware` | `qiskit-ibm-runtime>=0.30` | the opt-in IBM Quantum adapter (real QPU, needs a token) |
 | `all` | every extra except `hardware` | |
@@ -72,7 +73,7 @@ More: [quick start guide](https://github.com/fsantibanezleal/CAOS_QVersus/blob/m
 
 ## The catalogue
 
-Twenty-one problems in six families, 125 instances. Each has at least one quantum method and one classical baseline.
+Twenty-two problems in seven families, 131 instances. Each has at least one quantum method and one classical baseline.
 
 | Problem | Family | Quantum solvers | Classical baseline |
 |---|---|---|---|
@@ -82,6 +83,7 @@ Twenty-one problems in six families, 125 instances. Each has at least one quantu
 | `grover`, `qft`, `qpe`, `shor` | flagship algorithms | Qiskit | linear scan, FFT, exact phase, trial division |
 | `maxcut`, `vqe`, `qml` | variational | Qiskit, PennyLane, Cirq | brute force + greedy, exact diagonalisation, RBF-SVM |
 | `noise`, `qec-repetition`, `qec-surface` | noise and QEC | Qiskit-Aer, Stim + PyMatching | the exact answer, the unprotected qubit |
+| `compilation` | compilation | the Qiskit transpiler, pytket | gate-by-gate translation |
 
 Per-problem parameters, result fields and the closed-form checks the tests enforce:
 [docs/problems](https://github.com/fsantibanezleal/CAOS_QVersus/blob/main/docs/problems.md).
