@@ -3,6 +3,7 @@ Adding a problem = add its module here; nothing else changes.
 """
 
 from qversus.problems import (  # noqa: F401  (import = registration)
+    bb84,
     bernstein_vazirani,
     chsh,
     deutsch_jozsa,
@@ -27,4 +28,4 @@ from qversus.problems import (  # noqa: F401  (import = registration)
 
 __all__ = ["state_prep", "maxcut", "bernstein_vazirani", "deutsch_jozsa", "simon", "grover", "qft", "qpe",
            "shor", "vqe", "qml_classifier", "noise", "qec_repetition", "qec_surface", "chsh", "teleportation",
-           "superdense", "single_qubit", "qrng", "interference"]
+           "superdense", "single_qubit", "qrng", "interference", "bb84"]

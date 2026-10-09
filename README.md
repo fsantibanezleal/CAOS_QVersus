@@ -72,11 +72,11 @@ More: [quick start guide](https://github.com/fsantibanezleal/CAOS_QVersus/blob/m
 
 ## The catalogue
 
-Twenty problems in six families, 119 instances. Each has at least one quantum method and one classical baseline.
+Twenty-one problems in six families, 125 instances. Each has at least one quantum method and one classical baseline.
 
 | Problem | Family | Quantum solvers | Classical baseline |
 |---|---|---|---|
-| `single-qubit`, `qrng`, `interference` | fundamentals | Qiskit | Bloch/bit model, PRNG, wave optics |
+| `single-qubit`, `qrng`, `interference`, `bb84` | fundamentals | Qiskit | Bloch/bit model, PRNG, wave optics, a tapped classical wire |
 | `state-prep`, `chsh`, `teleportation`, `superdense` | entanglement | Qiskit | the amplitudes written down directly, local hidden variables, measure-and-resend, one bit per carrier |
 | `deutsch-jozsa`, `bernstein-vazirani`, `simon` | oracle algorithms | Qiskit | query-counting classical algorithms |
 | `grover`, `qft`, `qpe`, `shor` | flagship algorithms | Qiskit | linear scan, FFT, exact phase, trial division |

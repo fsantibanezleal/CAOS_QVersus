@@ -2,7 +2,7 @@
 
 `qversus` is a small engine with one execution path: formulations (`Problem`) are attacked by adapters over
 real frameworks and by classical methods (`Solver`), paired by a registry, and every circuit-model run is
-recorded as a replayable `Trace`. This wiki documents the contracts, the twenty problems, the adapters and
+recorded as a replayable `Trace`. This wiki documents the contracts, the twenty-one problems, the adapters and
 how to extend or release the package.
 
 | Section | What it answers |

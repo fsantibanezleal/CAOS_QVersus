@@ -59,3 +59,42 @@ Instances: φ = 0, π/4, π/2, 2π/3, 3π/4, π (`itf-0` ... `itf-pi`).
 Checked: P(0) is 1 at φ = 0, 0 at φ = π, 0.5 at φ = π/2; the classical wave reproduces cos²(φ/2) at every
 instance: interference is a wave phenomenon, not by itself a quantum advantage. References: Feynman Lectures
 III-1, feynmanlectures.caltech.edu/III_01.html; Nielsen and Chuang (2010).
+
+## `bb84`: quantum key distribution, where listening leaves errors
+
+Alice sends random bits in random bases (Z or X), Bob measures in random bases, and they keep the rounds whose
+bases matched. An intercept-resend eavesdropper on a fraction f of the rounds guesses the wrong basis half the
+time and then randomises Bob's bit, adding f/4 to the error rate of the sifted key; a channel that flips a bit
+with probability p adds independently, so the expected QBER is f/4 + p - f·p/2. Above about 11% QBER no secret
+key survives one-way post-processing (Shor-Preskill) and Alice and Bob abort; below it, a fraction 1 - 2·h(QBER)
+of the sifted key is secret. The channel's error is a Pauli Y with probability p, which flips the outcome in
+either basis.
+
+| Parameter | Meaning |
+|---|---|
+| `n` | qubits sent (rounds) |
+| `f` | fraction of the rounds Eve intercepts and resends |
+| `p` | channel error probability |
+
+Instances: `bb84-clean` (f = 0, p = 0), `bb84-eve-all` (f = 1), `bb84-eve-half` (f = 0.5), `bb84-noise`
+(p = 0.05), `bb84-eve-noise` (f = 0.5, p = 0.05), all with n = 2048; `bb84-short` (n = 128, f = 1).
+
+| Solver | `value` fields |
+|---|---|
+| `bb84-qiskit` | `qber`, `expected_qber`, `stderr`, `sifted`, `errors`, `abort`, `eve_present`, `eve_known_fraction`, `secret_fraction`, `key_bits` |
+| `bb84-classical` | `qber`, `errors`, `key_length`, `eve_known_fraction`, `abort`, `eve_present`, `detectable` (always false) |
+
+`bb84-qiskit` takes every measurement probability from a Qiskit statevector (preparation, the channel's Y, the
+rotation into the measuring basis), draws the rounds from the seed, and traces one representative round: Alice
+sends |+⟩, Eve's Z measurement written as a CNOT onto her probe, Bob measures in X. Its trace `extra` also
+carries the QBER against f at the instance's p (`qber_vs_f`) and the first 24 rounds (`sample_rounds`).
+`bb84-classical` runs the same draws over a classical wire: Eve copies the bits she taps without disturbing
+them, so the error rate is the channel's alone.
+
+Checked: the outcome table is the textbook one (matched basis gives the bit, a wrong basis a fair coin, the Y
+flips either basis); every instance's QBER is within four standard errors of f/4 + p - f·p/2; about half the
+rounds survive sifting; Eve knows a fraction f/2 of the sifted key; the run aborts exactly on the instances with
+an eavesdropper; the classical error rate is p whatever Eve does. References: Bennett and Brassard (1984),
+reprinted in Theor. Comput. Sci. 560 (2014), doi:10.1016/j.tcs.2014.05.025; Shor and Preskill, Phys. Rev.
+Lett. 85, 441 (2000), doi:10.1103/PhysRevLett.85.441; Scarani et al., Rev. Mod. Phys. 81, 1301 (2009),
+doi:10.1103/RevModPhys.81.1301.

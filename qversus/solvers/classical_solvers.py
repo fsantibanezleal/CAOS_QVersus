@@ -699,3 +699,42 @@ class GreedyMaxCut(Solver):
                       "trivial que ya alcanza (o casi) el óptimo en estos grafos.",
             },
         )
+
+
+@register_solver
+class ClassicalTappedChannel(Solver):
+    name = "bb84-classical"
+    label = {"en": "Tapped classical channel · classical", "es": "Canal clásico intervenido · clásico"}
+    framework = "classical:numpy"
+    paradigm = CLASSICAL
+
+    def applicable(self, problem: Problem) -> bool:
+        return problem.id == "bb84"
+
+    def run(self, problem, instance: Instance, seed: int, shots: int) -> SolverResult:
+        # The same key exchange over a classical wire, with the same random draws as the quantum run. Eve copies
+        # every bit she taps perfectly and resends it untouched, so Bob's error rate is the channel's alone:
+        # nothing in the data depends on whether she listened. There are no bases, so no bit is sifted away.
+        from qversus.problems.bb84 import ABORT_QBER, draw_rounds
+
+        n, f, p = instance.params["n"], float(instance.params["f"]), float(instance.params["p"])
+        t0 = time.perf_counter()
+        rounds = draw_rounds(n, f, p, seed)
+        bob = rounds["alice_bit"] ^ rounds["flip"].astype(int)
+        errors = int((bob != rounds["alice_bit"]).sum())
+        q = errors / n
+        known = float(rounds["eve"].mean())
+        wall = (time.perf_counter() - t0) * 1e3
+        return SolverResult(
+            solver=self.name, label=self.label, framework=self.framework, paradigm=self.paradigm,
+            value={"qber": round(q, 6), "errors": errors, "key_length": n, "eve_known_fraction": round(known, 6),
+                   "abort": bool(q > ABORT_QBER), "eve_present": f > 0, "detectable": False},
+            cost={"wall_ms": round(wall, 3), "rounds": n},
+            notes={"en": f"Over a classical wire Eve copies {known:.0%} of the {n} bits without a trace: Bob's error "
+                         f"rate is {q:.4f}, the channel's alone, whether or not she listened. Copying a classical "
+                         "bit disturbs nothing; that is the gap BB84 closes.",
+                   "es": f"Por un cable clásico Eve copia el {known:.0%} de los {n} bits sin dejar rastro: la tasa de "
+                         f"error de Bob es {q:.4f}, solo la del canal, haya escuchado o no. Copiar un bit clásico no "
+                         "perturba nada; esa es la brecha que BB84 cierra."},
+            optimal=True,
+        )
