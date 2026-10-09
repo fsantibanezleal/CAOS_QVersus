@@ -10,6 +10,7 @@ target state), PennyLane (the H2 Hamiltonian) or scikit-learn (the RBF-SVM).
 | `pennylane_solvers` | PennyLane 0.45.0 | `qaoa-pennylane`, `vqe-pennylane`, `qml-pennylane` | quantum-sim |
 | `cirq_solvers` | cirq-core 1.6.1 | `qaoa-cirq` | quantum-sim |
 | `stim_solvers` | Stim 1.16.0 + PyMatching 2 | `qec-stim` | quantum-sim |
+| `qulacs_solvers` | Qulacs 0.6 (with Qiskit to build the circuit) | `statevector-qulacs` | quantum-sim |
 | `classical_solvers` | NumPy (+ the lazy imports above) | one or two per problem | classical |
 | `hardware_solvers` | qiskit-ibm-runtime | `ibm-hardware` (opt-in) | quantum-hardware |
 
@@ -21,3 +22,4 @@ target state), PennyLane (the H2 Hamiltonian) or scikit-learn (the RBF-SVM).
 4. [Stim and PyMatching](solvers/04_stim.md)
 5. [Classical baselines](solvers/05_classical.md)
 6. [IBM Quantum hardware (opt-in)](solvers/06_ibm-hardware.md)
+7. [Qulacs](solvers/07_qulacs.md)
