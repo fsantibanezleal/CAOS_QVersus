@@ -415,3 +415,61 @@ def test_bb84_secret_fraction_vanishes_at_the_shor_preskill_threshold():
     assert secret_fraction(0.0) == 1.0
     assert secret_fraction(0.25) == 0.0
     assert 0 < secret_fraction(0.10) < 0.07 and secret_fraction(0.111) < 1e-3
+
+
+COMPILATION = ["comp-qft3", "comp-qft4", "comp-grover3", "comp-ghz5", "comp-adder", "comp-random4"]
+
+
+@pytest.mark.parametrize("instance_id", COMPILATION)
+def test_compilers_keep_the_unitary_and_never_lose_to_gate_by_gate(instance_id):
+    pytest.importorskip("pytket")
+    from qversus.problems.compilation import BASIS
+    from qversus.registry import get_problem, solvers_for
+
+    problem = get_problem("compilation")
+    inst = problem.instance(instance_id)
+    res = {s.name: s.run(problem, inst, seed=42, shots=256) for s in solvers_for(problem)}
+    assert set(res) == {"compile-rebase", "compile-qiskit", "compile-pytket"}
+    base = res["compile-rebase"].value
+    assert base["equivalent"] and base["two_qubit_saved"] == 0 and not base["relabels_wires"]
+    for name in ("compile-qiskit", "compile-pytket"):
+        v = res[name].value
+        assert v["equivalent"], name
+        assert v["two_qubit"] <= base["two_qubit"] and v["depth"] <= base["depth"], (name, v, base)
+        assert sorted(v["output_wires"]) == list(range(inst.params["n"]))
+    ops = res["compile-qiskit"].trace.circuit_ops + res["compile-pytket"].extra["compiled_ops"]
+    assert {op["gate"] for op in ops} <= set(BASIS)
+
+
+def test_compilers_strip_the_redundant_gates_and_the_qft_swaps():
+    pytest.importorskip("pytket")
+    from qversus.registry import get_problem, solvers_for
+
+    problem = get_problem("compilation")
+    ghz = problem.instance("comp-ghz5")
+    qft = problem.instance("comp-qft4")
+    for s in solvers_for(problem):
+        if s.name == "compile-rebase":
+            continue
+        assert s.run(problem, ghz, seed=42, shots=64).value["two_qubit"] == 4      # the GHZ chain alone
+        v = s.run(problem, qft, seed=42, shots=64).value
+        assert v["relabels_wires"] and v["output_wires"] == [3, 2, 1, 0]          # swaps folded into wiring
+        assert v["two_qubit"] <= 12                                                # 6 controlled phases, 2 CX each
+
+
+def test_compilation_simulator_and_rebase_rules_are_exact():
+    from qiskit import QuantumCircuit
+    from qiskit.quantum_info import Operator
+
+    from qversus.problems.compilation import _RULES, equivalent, gate_matrix, rebase, unitary
+
+    for gate in _RULES:
+        k = {"cz": 2, "swap": 2, "cp": 2, "ccx": 3}.get(gate, 1)
+        params = [0.7] if gate in ("rx", "ry", "p", "cp") else []
+        targets = [2, 0, 1][:k] if k > 1 else [1]
+        op = [{"gate": gate, "targets": targets, "params": params}]
+        qc = QuantumCircuit(3)
+        getattr(qc, gate)(*params, *targets)
+        assert abs(unitary(op, 3) - Operator(qc).data).max() < 1e-12, gate          # the simulator is Qiskit's
+        assert equivalent(unitary(rebase(op), 3), unitary(op, 3)), gate             # each rule is the gate
+        assert gate_matrix(gate, params).shape == (2**k, 2**k)

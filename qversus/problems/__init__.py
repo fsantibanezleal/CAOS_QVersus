@@ -6,6 +6,7 @@ from qversus.problems import (  # noqa: F401  (import = registration)
     bb84,
     bernstein_vazirani,
     chsh,
+    compilation,
     deutsch_jozsa,
     grover,
     interference,
@@ -28,4 +29,4 @@ from qversus.problems import (  # noqa: F401  (import = registration)
 
 __all__ = ["state_prep", "maxcut", "bernstein_vazirani", "deutsch_jozsa", "simon", "grover", "qft", "qpe",
            "shor", "vqe", "qml_classifier", "noise", "qec_repetition", "qec_surface", "chsh", "teleportation",
-           "superdense", "single_qubit", "qrng", "interference", "bb84"]
+           "superdense", "single_qubit", "qrng", "interference", "bb84", "compilation"]

@@ -1141,3 +1141,62 @@ class QiskitBB84(Solver):
             trace=trace,
             extra={"qber_vs_f": curve},
         )
+
+
+@register_solver
+class QiskitTranspile(Solver):
+    name = "compile-qiskit"
+    label = {"en": "Transpiler, level 3 · Qiskit", "es": "Transpilador, nivel 3 · Qiskit"}
+    framework = "qiskit"
+    paradigm = QUANTUM_SIM
+
+    def applicable(self, problem: Problem) -> bool:
+        return problem.id == "compilation"
+
+    def run(self, problem, instance: Instance, seed: int, shots: int) -> SolverResult:
+        from qiskit import transpile
+        from qiskit.quantum_info import Operator
+
+        from qversus.core.trace import Trace
+        from qversus.problems.compilation import BASIS, compiled_value, source_circuit, unitary
+        from qversus.problems.compilation import equivalent as same_unitary
+
+        n = instance.params["n"]
+        src = source_circuit(instance.params)
+        qc = QuantumCircuit(n)
+        for op in src:
+            getattr(qc, op["gate"])(*op["params"], *op["targets"])
+        t0 = time.perf_counter()
+        out = transpile(qc, basis_gates=list(BASIS), optimization_level=3, seed_transpiler=seed)
+        wall = (time.perf_counter() - t0) * 1e3
+        wires = out.layout.final_index_layout() if out.layout is not None else list(range(n))
+        # Operator.from_circuit applies the transpiler's output relabelling, so this is the logical unitary.
+        ok = same_unitary(np.asarray(Operator.from_circuit(out).data), unitary(src, n))
+        ops = circuit_ops(out)
+        value = compiled_value(src, ops, n, ok, wires)
+        trace = Trace(
+            case_id=problem.id, title=problem.title, concept=problem.concept, qubits=n,
+            steps=evolve(out), measurements=measure_counts(out, shots, seed), circuit_ops=ops,
+            provenance={"engine": "qiskit", "engine_version": QISKIT_VERSION, "seed": seed,
+                        "lane": "tbd", "ran_on": "simulator"},
+            references=problem.references,
+            extra={"source_ops": src, "source": value["source"], "rebased": value["rebased"],
+                   "compiled": {k: value[k] for k in ("two_qubit", "depth", "gates")}, "output_wires": value["output_wires"]},
+        )
+        relabel_en = (f" The output wires are relabelled (logical qubit i is read on wire {value['output_wires']}[i]), "
+                      "which is how the trailing swaps disappear." if value["relabels_wires"] else "")
+        relabel_es = (f" Los cables de salida se reetiquetan (el qubit lógico i se lee en el cable "
+                      f"{value['output_wires']}[i]), así desaparecen los intercambios finales."
+                      if value["relabels_wires"] else "")
+        return SolverResult(
+            solver=self.name, label=self.label, framework=self.framework, paradigm=self.paradigm,
+            value=value,
+            cost={"wall_ms": round(wall, 3), "qubits": n},
+            notes={"en": f"Qiskit's preset level-3 pass manager: {value['two_qubit']} CX (against "
+                         f"{value['rebased']['two_qubit']} gate by gate), depth {value['depth']}, {value['gates']} gates; "
+                         f"same unitary: {'yes' if ok else 'NO'}.{relabel_en}",
+                   "es": f"El gestor de pases de nivel 3 de Qiskit: {value['two_qubit']} CX (frente a "
+                         f"{value['rebased']['two_qubit']} compuerta a compuerta), profundidad {value['depth']}, "
+                         f"{value['gates']} compuertas; mismo unitario: {'sí' if ok else 'NO'}.{relabel_es}"},
+            trace=trace,
+        )
