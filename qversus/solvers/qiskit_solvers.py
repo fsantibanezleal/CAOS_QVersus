@@ -1028,3 +1028,116 @@ class QiskitQAOA(Solver):
             trace=trace,
             extra={"landscape": trace.extra["landscape"]},
         )
+
+
+def _bb84_outcome_table() -> np.ndarray:
+    """P(outcome 1) for a qubit prepared as `bit` in `basis`, optionally hit by a Pauli Y, measured in `meas`.
+
+    Indexed [bit, basis, flip, meas], bases 0 = Z, 1 = X. Every entry comes from a Qiskit statevector: the
+    preparation (X for bit 1, H for the X basis), the channel's Y (which flips the outcome in either basis) and
+    the rotation into the measurement basis.
+    """
+    table = np.zeros((2, 2, 2, 2))
+    for bit in (0, 1):
+        for basis in (0, 1):
+            for flip in (0, 1):
+                for meas in (0, 1):
+                    qc = QuantumCircuit(1)
+                    if bit:
+                        qc.x(0)
+                    if basis:
+                        qc.h(0)
+                    if flip:
+                        qc.y(0)
+                    if meas:
+                        qc.h(0)
+                    table[bit, basis, flip, meas] = float(Statevector(qc).probabilities()[1])
+    return table
+
+
+def _bb84_bob_bits(rounds: dict, table: np.ndarray) -> np.ndarray:
+    """Bob's outcomes: Eve measures and resends on her rounds, the channel flips, Bob measures in his basis."""
+    no_flip = np.zeros_like(rounds["alice_bit"])
+    eve_bit = (rounds["u_eve"] < table[rounds["alice_bit"], rounds["alice_basis"], no_flip,
+                                       rounds["eve_basis"]]).astype(int)
+    bit = np.where(rounds["eve"], eve_bit, rounds["alice_bit"])
+    basis = np.where(rounds["eve"], rounds["eve_basis"], rounds["alice_basis"])
+    flip = rounds["flip"].astype(int)
+    return (rounds["u_bob"] < table[bit, basis, flip, rounds["bob_basis"]]).astype(int)
+
+
+@register_solver
+class QiskitBB84(Solver):
+    name = "bb84-qiskit"
+    label = {"en": "BB84 exchange · Qiskit", "es": "Intercambio BB84 · Qiskit"}
+    framework = "qiskit"
+    paradigm = QUANTUM_SIM
+
+    def applicable(self, problem: Problem) -> bool:
+        return problem.id == "bb84"
+
+    def run(self, problem, instance: Instance, seed: int, shots: int) -> SolverResult:
+        from qversus.core.trace import Trace
+        from qversus.problems.bb84 import ABORT_QBER, draw_rounds, expected_qber, sift
+
+        n, f, p = instance.params["n"], float(instance.params["f"]), float(instance.params["p"])
+        t0 = time.perf_counter()
+        table = _bb84_outcome_table()
+        rounds = draw_rounds(n, f, p, seed)
+        bob = _bb84_bob_bits(rounds, table)
+        stats = sift(rounds, bob)
+        wall = (time.perf_counter() - t0) * 1e3
+        expected = expected_qber(f, p)
+
+        curve = []
+        for fk in (0.0, 0.25, 0.5, 0.75, 1.0):
+            rk = draw_rounds(n, fk, p, seed)
+            curve.append({"f": fk, "expected": round(expected_qber(fk, p), 6),
+                          "simulated": sift(rk, _bb84_bob_bits(rk, table))["qber"]})
+        sample = [{"alice_bit": int(rounds["alice_bit"][i]), "alice_basis": "ZX"[rounds["alice_basis"][i]],
+                   "eve_basis": "ZX"[rounds["eve_basis"][i]] if rounds["eve"][i] else None,
+                   "flip": bool(rounds["flip"][i]), "bob_basis": "ZX"[rounds["bob_basis"][i]],
+                   "bob_bit": int(bob[i]), "sifted": bool(rounds["alice_basis"][i] == rounds["bob_basis"][i])}
+                  for i in range(min(n, 24))]
+
+        # One representative round: Alice sends 0 in the X basis, Bob measures in X. With an eavesdropper, her
+        # Z-basis measurement is written as a CNOT onto her probe qubit, the same disturbance as measuring and
+        # resending: Bob's qubit is left maximally mixed and he reads the wrong bit half the time.
+        qc = QuantumCircuit(2 if f > 0 else 1)
+        captions = [{"en": "Alice sends bit 0 in the X basis: |+⟩", "es": "Alice envía el bit 0 en la base X: |+⟩"}]
+        qc.h(0)
+        if f > 0:
+            qc.cx(0, 1)
+            captions.append({"en": "Eve measures in Z (a CNOT onto her probe): the qubit loses its X value",
+                             "es": "Eve mide en Z (un CNOT sobre su sonda): el qubit pierde su valor en X"})
+        qc.h(0)
+        captions.append({"en": "Bob measures in X (bases match, so the round is kept)",
+                         "es": "Bob mide en X (las bases coinciden, así que la ronda se conserva)"})
+        trace = Trace(
+            case_id=problem.id, title=problem.title, concept=problem.concept, qubits=qc.num_qubits,
+            steps=evolve(qc, captions), measurements=measure_counts(qc, shots, seed), circuit_ops=circuit_ops(qc),
+            provenance={"engine": "qiskit", "engine_version": QISKIT_VERSION, "seed": seed,
+                        "lane": "tbd", "ran_on": "simulator"},
+            references=problem.references,
+            extra={**stats, "expected_qber": round(expected, 6), "abort_qber": ABORT_QBER, "rounds": n,
+                   "qber_vs_f": curve, "sample_rounds": sample},
+        )
+        verdict_en = ("abort: the error rate is above 11%, an eavesdropper (or too noisy a link) is exposed"
+                      if stats["abort"] else "keep: the error rate is below 11%, a secret key survives")
+        verdict_es = ("abortar: la tasa de error supera 11%, una espía (o un enlace demasiado ruidoso) queda expuesta"
+                      if stats["abort"] else "conservar: la tasa de error es menor que 11%, sobrevive una clave secreta")
+        return SolverResult(
+            solver=self.name, label=self.label, framework=self.framework, paradigm=self.paradigm,
+            value={**stats, "expected_qber": round(expected, 6), "eve_present": f > 0},
+            cost={"wall_ms": round(wall, 3), "rounds": n, "qubits_sent": n, "sifted": stats["sifted"]},
+            notes={"en": f"{n} qubits sent, {stats['sifted']} kept after sifting; QBER {stats['qber']:.4f} against "
+                         f"the expected f/4 + p - f·p/2 = {expected:.4f}. Decision: {verdict_en}. Eve knows "
+                         f"{stats['eve_known_fraction']:.0%} of the sifted key; {stats['key_bits']} secret bits "
+                         "remain after privacy amplification.",
+                   "es": f"{n} qubits enviados, {stats['sifted']} conservados tras el tamizado; QBER "
+                         f"{stats['qber']:.4f} frente al esperado f/4 + p - f·p/2 = {expected:.4f}. Decisión: "
+                         f"{verdict_es}. Eve conoce el {stats['eve_known_fraction']:.0%} de la clave tamizada; "
+                         f"quedan {stats['key_bits']} bits secretos tras la amplificación de privacidad."},
+            trace=trace,
+            extra={"qber_vs_f": curve},
+        )

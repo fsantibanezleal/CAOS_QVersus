@@ -6,7 +6,7 @@ target state), PennyLane (the H2 Hamiltonian) or scikit-learn (the RBF-SVM).
 
 | Module | Framework (pin used for committed results) | Solvers | Paradigm |
 |---|---|---|---|
-| `qiskit_solvers` | Qiskit 2.4.2 + qiskit-aer 0.17.2 | 16: `state-qiskit`, `chsh-qiskit`, `teleport-qiskit`, `superdense-qiskit`, `gates-qiskit`, `qrng-qiskit`, `interference-qiskit`, `dj-qiskit`, `bv-qiskit`, `simon-qiskit`, `grover-qiskit`, `qft-qiskit`, `qpe-qiskit`, `shor-qiskit`, `qaoa-qiskit`, `noise-qiskit` | quantum-sim |
+| `qiskit_solvers` | Qiskit 2.4.2 + qiskit-aer 0.17.2 | 17: `state-qiskit`, `chsh-qiskit`, `teleport-qiskit`, `superdense-qiskit`, `gates-qiskit`, `qrng-qiskit`, `interference-qiskit`, `dj-qiskit`, `bv-qiskit`, `simon-qiskit`, `grover-qiskit`, `qft-qiskit`, `qpe-qiskit`, `shor-qiskit`, `qaoa-qiskit`, `noise-qiskit`, `bb84-qiskit` | quantum-sim |
 | `pennylane_solvers` | PennyLane 0.45.0 | `qaoa-pennylane`, `vqe-pennylane`, `qml-pennylane` | quantum-sim |
 | `cirq_solvers` | cirq-core 1.6.1 | `qaoa-cirq` | quantum-sim |
 | `stim_solvers` | Stim 1.16.0 + PyMatching 2 | `qec-stim` | quantum-sim |

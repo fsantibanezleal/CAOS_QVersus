@@ -339,3 +339,79 @@ def test_qulacs_runs_the_same_circuit_as_qiskit_to_the_traces_rounding(problem_i
         assert res.value["matches_qiskit"], (inst.id, res.value["max_abs_diff"])
         assert res.value["max_abs_diff"] < 1e-5
         assert sum(res.extra["counts"].values()) == 256
+
+
+def _bb84(instance_id):
+    from qversus.registry import get_problem, solvers_for
+
+    problem = get_problem("bb84")
+    inst = problem.instance(instance_id)
+    return inst, {s.name: s.run(problem, inst, seed=42, shots=256) for s in solvers_for(problem)}
+
+
+def test_bb84_outcome_table_is_the_textbook_one():
+    from qversus.solvers.qiskit_solvers import _bb84_outcome_table
+
+    t = _bb84_outcome_table()
+    for bit in (0, 1):
+        for basis in (0, 1):
+            assert abs(t[bit, basis, 0, basis] - bit) < 1e-12        # matched basis: the bit, with certainty
+            assert abs(t[bit, basis, 1, basis] - (1 - bit)) < 1e-12  # the channel's Y flips it, in either basis
+            assert abs(t[bit, basis, 0, 1 - basis] - 0.5) < 1e-12    # wrong basis: a fair coin
+
+
+@pytest.mark.parametrize("instance_id", ["bb84-clean", "bb84-eve-all", "bb84-eve-half", "bb84-noise",
+                                         "bb84-eve-noise", "bb84-short"])
+def test_bb84_qber_matches_the_closed_form(instance_id):
+    from qversus.problems.bb84 import expected_qber
+
+    inst, res = _bb84(instance_id)
+    n, f, p = inst.params["n"], inst.params["f"], inst.params["p"]
+    v = res["bb84-qiskit"].value
+    q = expected_qber(f, p)
+    assert v["expected_qber"] == round(q, 6)
+    assert abs(v["sifted"] - n / 2) < 4 * (n / 4) ** 0.5           # about half the rounds survive sifting
+    assert abs(v["qber"] - q) < 4 * (q * (1 - q) / v["sifted"]) ** 0.5 + 1e-12
+    if f == 0 and p == 0:
+        assert v["qber"] == 0 and v["key_bits"] == v["sifted"]     # a clean link keeps every sifted bit
+    assert abs(v["eve_known_fraction"] - f / 2) < 4 * (0.25 / v["sifted"]) ** 0.5 + 1e-12
+
+
+@pytest.mark.parametrize("instance_id, abort", [("bb84-clean", False), ("bb84-noise", False),
+                                                 ("bb84-eve-all", True), ("bb84-eve-half", True),
+                                                 ("bb84-eve-noise", True), ("bb84-short", True)])
+def test_bb84_aborts_exactly_when_eve_pushes_the_error_past_eleven_percent(instance_id, abort):
+    _, res = _bb84(instance_id)
+    assert res["bb84-qiskit"].value["abort"] is abort
+
+
+@pytest.mark.parametrize("instance_id", ["bb84-clean", "bb84-eve-all", "bb84-noise", "bb84-eve-noise"])
+def test_bb84_classical_wire_cannot_see_eve(instance_id):
+    inst, res = _bb84(instance_id)
+    n, f, p = inst.params["n"], inst.params["f"], inst.params["p"]
+    v = res["bb84-classical"].value
+    assert abs(v["qber"] - p) < 4 * (p * (1 - p) / n) ** 0.5 + 1e-12  # the channel's error, whatever Eve does
+    assert v["abort"] is False and v["detectable"] is False
+    assert abs(v["eve_known_fraction"] - f) < 4 * (0.25 / n) ** 0.5 + 1e-12
+
+
+def test_bb84_is_a_pure_function_of_the_seed_and_traces_the_disturbance():
+    _, a = _bb84("bb84-eve-noise")
+    _, b = _bb84("bb84-eve-noise")
+    assert a["bb84-qiskit"].value == b["bb84-qiskit"].value
+    trace = a["bb84-qiskit"].trace
+    assert trace.qubits == 2 and [s.gate for s in trace.steps] == ["init", "H", "CX", "H"]
+    # Eve's probe leaves Bob's qubit maximally mixed: its Bloch vector shrinks to the origin.
+    assert max(abs(c) for c in trace.steps[2].bloch[0]) < 1e-6
+    curve = trace.extra["qber_vs_f"]
+    for pt, q in zip(curve, [0.05, 0.10625, 0.1625, 0.21875, 0.275], strict=True):  # p = 0.05, f = 0 .. 1
+        assert abs(pt["expected"] - q) < 1e-9
+        assert abs(pt["simulated"] - q) < 4 * (q * (1 - q) / 1024) ** 0.5
+
+
+def test_bb84_secret_fraction_vanishes_at_the_shor_preskill_threshold():
+    from qversus.problems.bb84 import secret_fraction
+
+    assert secret_fraction(0.0) == 1.0
+    assert secret_fraction(0.25) == 0.0
+    assert 0 < secret_fraction(0.10) < 0.07 and secret_fraction(0.111) < 1e-3

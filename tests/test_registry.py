@@ -13,11 +13,11 @@ from qversus.solvers.base import CLASSICAL, PARADIGMS, QUANTUM_HARDWARE
 EXPECTED_PROBLEMS = {
     "state-prep", "maxcut", "bernstein-vazirani", "deutsch-jozsa", "simon", "grover", "qft", "qpe", "shor",
     "vqe", "qml", "noise", "qec-repetition", "qec-surface", "chsh", "teleportation", "superdense",
-    "single-qubit", "qrng", "interference",
+    "single-qubit", "qrng", "interference", "bb84",
 }
 
 
-def test_catalogue_has_the_twenty_problems():
+def test_catalogue_has_the_twenty_one_problems():
     assert set(all_problems()) == EXPECTED_PROBLEMS
 
 

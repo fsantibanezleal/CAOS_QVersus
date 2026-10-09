@@ -1,6 +1,6 @@
 # Problems
 
-Twenty formulations in six families, 119 instances. Each page lists, per problem, the instance parameters,
+Twenty-one formulations in six families, 125 instances. Each page lists, per problem, the instance parameters,
 the result fields of each solver, the closed-form facts the test suite asserts, and the primary references.
 
 | Problem | Family | Metric | Instances | Quantum solvers | Classical baseline |
@@ -8,6 +8,7 @@ the result fields of each solver, the closed-form facts the test suite asserts, 
 | `single-qubit` | fundamentals | Bloch vector of the prepared state | 6 | `gates-qiskit` | `bit-classical` |
 | `qrng` | fundamentals | Shannon entropy (bits) | 6 | `qrng-qiskit` | `qrng-classical` |
 | `interference` | fundamentals | P(0) = cos²(φ/2) | 6 | `interference-qiskit` | `interference-classical` |
+| `bb84` | fundamentals | QBER of the sifted key | 6 | `bb84-qiskit` | `bb84-classical` |
 | `state-prep` | entanglement | prepared state fidelity | 7 | `state-qiskit` | `state-classical` |
 | `chsh` | entanglement | CHSH value S | 6 | `chsh-qiskit` | `chsh-classical` |
 | `teleportation` | entanglement | teleportation fidelity | 6 | `teleport-qiskit` | `teleport-classical` |
@@ -28,7 +29,7 @@ the result fields of each solver, the closed-form facts the test suite asserts, 
 
 ## Families
 
-1. [Fundamentals](problems/01_fundamentals.md): single-qubit gates, quantum randomness, interference.
+1. [Fundamentals](problems/01_fundamentals.md): single-qubit gates, quantum randomness, interference, BB84 key distribution.
 2. [Entanglement](problems/02_entanglement.md): Bell, GHZ and W states, the CHSH inequality, teleportation, superdense coding.
 3. [Oracle algorithms](problems/03_oracle-algorithms.md): Deutsch-Jozsa, Bernstein-Vazirani, Simon.
 4. [Flagship algorithms](problems/04_flagship-algorithms.md): Grover, the QFT, phase estimation, Shor (N = 15).
