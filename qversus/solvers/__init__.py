@@ -13,6 +13,7 @@ _ADAPTER_MODULES = [
     ("qversus.solvers.pennylane_solvers", "PennyLane"),
     ("qversus.solvers.cirq_solvers", "Cirq"),
     ("qversus.solvers.stim_solvers", "Stim (QEC)"),
+    ("qversus.solvers.qulacs_solvers", "Qulacs"),
     ("qversus.solvers.hardware_solvers", "Real hardware (IBM, opt-in)"),
 ]
 

@@ -325,3 +325,17 @@ def test_grover_notes_state_the_numbers_the_solvers_report():
         assert int(k) == quantum.extra["iterations"], inst.id
         assert float(expected) == classical.value["classical_queries"], inst.id
     assert "~N/2" not in problem.concept["en"] and "(N+1)/(M+1)" in problem.concept["en"]
+
+
+@pytest.mark.parametrize("problem_id", ["single-qubit", "interference", "qft", "grover", "bernstein-vazirani", "deutsch-jozsa"])
+def test_qulacs_runs_the_same_circuit_as_qiskit_to_the_traces_rounding(problem_id):
+    pytest.importorskip("qulacs")
+    from qversus.registry import get_problem, solvers_for
+
+    problem = get_problem(problem_id)
+    qulacs_solver = next(s for s in solvers_for(problem) if s.name == "statevector-qulacs")
+    for inst in problem.instances():
+        res = qulacs_solver.run(problem, inst, seed=42, shots=256)
+        assert res.value["matches_qiskit"], (inst.id, res.value["max_abs_diff"])
+        assert res.value["max_abs_diff"] < 1e-5
+        assert sum(res.extra["counts"].values()) == 256

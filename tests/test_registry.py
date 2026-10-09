@@ -60,6 +60,7 @@ def test_every_problem_is_attacked_by_a_quantum_method_and_a_classical_baseline(
         ("pennylane", "PennyLane", ["vqe-pennylane", "qml-pennylane", "qaoa-pennylane"]),
         ("cirq", "Cirq", ["qaoa-cirq"]),
         ("stim", "Stim (QEC)", ["qec-stim"]),
+        ("qulacs", "Qulacs", ["statevector-qulacs"]),
         ("qiskit", "Qiskit + Aer", ["grover-qiskit", "qaoa-qiskit"]),
     ],
 )
